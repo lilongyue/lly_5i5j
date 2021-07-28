@@ -1,0 +1,55 @@
+1.memcache 和 Redis 的区别
+	数据结构：memcache仅支持简单的key-value形式，Redis支持的数据更多（string字符串，set集合，list列表，hash散列，zset有序集合）；
+	多线程：memcache支持多线程，Redis支持单线程
+	持久化：Redis支持持久化，memcache不支持持久化
+	分布式：Redis做主从结构，memcache服务器需要通过hash一致化来支撑主从结构
+	
+2.什么是 Redis 穿透和雪崩 缓存击穿
+	缓存穿透:就是访问redis中一个不存在的key的时候,会直接穿过缓存,去数据库中进行查询.
+	缓存雪崩:就是每秒有5000个请求过来时候,redis缓存库崩了,然后这些请求瞬间落在了mysql数据库上,直接导致数据库死机.
+	缓存击穿:简单地说就是缓存过期大量线程访问数据库
+	
+3.单线程的redis如何实现阻塞队列
+	整个阻塞执行过程相当于是分散开的，每次请求结束后都判断之前的阻塞列表是否满足执行条件，
+	类似我们用轮询来实现长连接的功能。所以看似阻塞的命令对其他命令的执行时不会有影响的，它们依然是单线程的。
+	
+4.Redis支持五种数据类型：
+	string（字符串），
+	hash（哈希），
+	list（列表），
+	set（集合）及
+	zset(sorted set：有序集合)。
+		
+5 .Redis的持久化（重要，面试题）
+	持久化：就是把内存中的数据保存到磁盘
+
+	1.Redis为什么要有持久化？
+
+	由于Redis是一个基于内存的数据库，因此数据容易丢失，为了解决数据丢失的问题，于是Redis就设计了持久化
+
+	2.Redis的持久的方式有哪些？
+
+	有两个，分别是rdb和aof的持久化方式
+
+	3.分别介绍一下Redis的持久化方式的机制
+
+	rdb持久化：Redis为我们提供了一个rdb的持久化方式具体每隔一定时间，或者当key的改变达到一定的数量的时候，就会自动往磁盘保存一次
+
+	 1 save 900 1（900秒后1个key改变） 2 save 300 10（300秒后19个key改变） 3 save 60 10000（60秒后10000个key改变）（save是或者的关系） 
+
+	aof持久化：Redis还为我们提供了一个aof的持久化方式，这种方式是通过记录用户的操作过程（用户每执行一次命令，就会被Redis记录在XXX.aof文件里，如果突然断电了，Redis的数据就会通过重新读取并执行XXX.aof里的命令记录来恢复数据）来恢复数据
+
+	4.两种Redis持久化方式的优缺点
+
+	都是为了防止数据丢失
+
+	rdb:假如三种方式没有一种被满足，触发不了保存，突然断电，那就会丢失数据
+
+	aof:为了解决rdb的弊端，就有了aof的持久化，始终在一个文件里保存记录，但aof的持久化随着时间的推移数据量会越来越大，占用很大的空间
+	
+6.MySQL操作成功之后Redis操作失败的回滚问题
+	每次操作Redis之后，都会判断Redis有没有操作成功，操作失败则进行手动回滚，
+	加一行代码：TransactionAspectSupport.currentTransactionStatus().setRollbackOnly();  配合@Transactional注解即可解决问题。
+	
+7.redis list，set,zset有序集合
+	https://www.runoob.com/redis/redis-data-types.html
